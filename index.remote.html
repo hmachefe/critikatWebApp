@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="googlebot" content="noindex, nofollow">
+
+  <link rel="stylesheet" media="all and (orientation:portrait)" href="critikat.css">
+  <link rel="stylesheet" media="all and (orientation:landscape)" href="critikat.css">  
+  
+  <script type="text/javascript" src="jquery-1.9.1.js"></script>
+  <link rel="stylesheet" type="text/css" href="bootstrap.css">
+  <link rel="stylesheet" type="text/css" href="bootstrap-responsive.css">
+  <link rel="stylesheet" type="text/css" href="general_foundicons.css">
+  <script type="text/javascript" src="bootstrap.js"></script>
+  <script type="text/javascript" src="angular.js"></script>
+  <script type="text/javascript" src="angular-sanitize.js"></script>
+  
+  <title>Critikat: derniers articles</title>
+
+</head>
+
+<body ng-app="RSS_Demo" ng-controller="AppCtrl" style="background-color: black; font-family: 'PT Sans', sans-serif;">
+
+<div style="display:none" id="helper"></div>
+
+<div ng-view style="margin-top: 12px; "></div>
+
+<div id="veil" ng-show="isLoading"></div>
+<div id="feedLoading" ng-show="isLoading">Loading...</div>
+
+
+<script type="text/ng-template" id="list_view.html">
+  <div ng-controller="ListCtrl">
+    <h1 ng-cloak>
+		<a href="http://www.critikat.com/" target="_blank">
+		<img src="http://www.critikat.com/squelettes/css/img/critikat.svg" style = "width: 142px; left:44%; position:relative">
+		</a>
+	</h1>
+
+    <div class="well well-small" ng-repeat="entry in feed_result.entries" list-done="layoutDone()" ng-cloak>
+      <a href="" ng-click="viewDetail(entry)" class="pull-left rssThumb" title="view detail" data-toggle="tooltip"><img ng-repeat="thumbnail in mediaOne(entry).thumbnails" ng-src="{{thumbnail.url}}"></a>
+
+      <a href="{{entry.link}}" target="_blank" title="article en ligne sur le site {{feed_result.viewAt}}" data-toggle="tooltip" data-placement="left" class="btn btn-primary pull-right" style="margin: 0 0 5px 10px">Accès au site</a>
+
+      <h4><a href="" ng-click="viewDetail(entry)" title="lire l'article" data-toggle="tooltip">{{entry.title}}</a></h4>
+
+      <p ng-bind-html="check(entry.summary)"></p>
+
+      <p class="muted" style="font-size: 10px;">
+        Posté: {{formatDate(entry.pubDate)}} -
+        <span class="label label-info" ng-repeat="category in entry.categories">{{formatLabel(category)}}</span>
+      </p>
+    </div>
+  </div>
+</script>
+
+
+<script type="text/ng-template" id="detail_view.html">
+  <div ng-controller="DetailCtrl">
+    <h3 class="lead">{{currEntry.title}}</h3>
+
+    <div id="vidTagAlert" class="alert alert-error">
+      <button type="button" class="close" id="btnTagAlert">&times;</button>
+      <strong>FAIL!</strong> The HTML5 &lt;video&gt; tag does not support .mp4 videos in Chrome and Firefox. Use Internet Explorer or Safari to watch these videos.
+    </div>
+
+    <video id="vPlayer" src="{{mediaOne(currEntry).url}}" controls autoplay ng-show="hasVideo(currEntry)"></video>
+
+    <div class="well well-small animHugo">
+      <p ng-bind-html="currEntry.description"></p>
+
+      <p class="muted">Posté: {{currEntry.publishedDate}} - <a href="{{currEntry.link}}" target="_blank" class="text-info" ng-click="videoStop()">Article {{feed_result.viewAt}}</a></p>
+    </div>
+  </div>
+</script>
+
+
+
+
+
+
+
+<script type='text/javascript'>//<![CDATA[
+
+'use strict';
+
+angular.module('RSS_Demo', ['ngSanitize'])
+
+.config(function($routeProvider) {
+  $routeProvider
+    .when('/', {
+      templateUrl: "list_view.html"
+    })
+    .when('/detail', {
+      templateUrl: "detail_view.html"
+    })
+    .when('/choose_feed', {
+      templateUrl: "choose_feed.html"
+    })
+    .otherwise({
+      redirectTo: '/'
+    })
+})
+
+.directive('listDone', function() {
+  return function(scope, element, attrs) {
+    if (scope.$last) { // all are rendered
+      scope.$eval(attrs.listDone);
+    }
+  }
+})
+
+.directive('onEnter', function() {
+  return function(scope, element, attrs) {
+    element.on('keydown', function(event) {
+      if (event.which === 13) {
+        scope.$apply(attrs.onEnter);
+      }
+    })
+  }
+})
+
+.service('rssFeed', function($q, $rootScope) {
+  this.get = function(url) {
+    var d = $q.defer();
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', url, true);
+	xhr.onload = function(result) {
+		$rootScope.$apply(d.resolve(result));
+	}
+	xhr.send(null);
+    /*
+	var feed = new google.feeds.Feed(url);
+    feed.setNumEntries(10);
+    feed.load(function(result) {
+      $rootScope.$apply(d.resolve(result));
+    });
+	*/
+    return d.promise;
+  }
+})
+
+.filter('strip_http', function() {
+  return function(str) {
+    var http = "http://";
+    return (str.indexOf(http) == 0) ? str.substr(http.length) : str;
+  }
+})
+
+.controller('AppCtrl', function($scope, $location, $timeout, rssFeed) {
+
+  $scope.scrollPos = {}; // scroll position of each view
+
+  $(window).on('scroll', function() {
+    if ($scope.okSaveScroll) { // false between $routeChangeStart and $routeChangeSuccess
+      $scope.scrollPos[$location.path()] = $(window).scrollTop();
+      //console.log($scope.scrollPos);
+    }
+  });
+
+  $scope.scrollClear = function(path) {
+    $scope.scrollPos[path] = 0;
+  }
+
+  $scope.$on('$routeChangeStart', function() {
+    $scope.okSaveScroll = false;
+  });
+
+  $scope.$on('$routeChangeSuccess', function() {
+    $timeout(function() { // wait for DOM, then restore scroll position
+      $(window).scrollTop($scope.scrollPos[$location.path()] ? $scope.scrollPos[$location.path()] : 0);
+      $scope.okSaveScroll = true;
+    }, 100);
+  });
+
+  $scope.setLoading = function(loading) {
+    $scope.isLoading = loading;
+  }
+
+  $scope.loadFeed = function(url, addFeed) {
+    $scope.setLoading(true);
+    rssFeed.get(url).then(function(result) {
+      //console.log(result);
+      if (result.error) {
+        alert("ERROR " + result.error.code + ": " + result.error.message + "\nurl: " + url);
+        $scope.setLoading(false);
+      } else {
+        if (addFeed) addFeed();
+        var urlParser = document.createElement('a');
+        //urlParser.href = result.feed.link;
+		urlParser.href = "http://www.critikat.com";
+        //result.feed.viewAt = urlParser.hostname;
+		//result.feed.viewAt = "www.critikat.com";
+        //$scope.feed_result = result.feed;
+		$scope.feed_result = {};
+		$scope.feed_result.entries = JSON.parse(result.currentTarget.responseText)
+        $scope.scrollClear('/');
+        $location.path('/');
+        //if ($scope.feed_result.entries == 0) {
+          $scope.setLoading(false);
+        //}
+      }
+    });
+  }
+
+  $scope.mediaOne = function(entry) { // return first media object for 'entry'
+    return (entry && entry.mediaGroups) ? entry.mediaGroups[0].contents[0] : {
+      url: ''
+    };
+  }
+
+  $scope.hasVideo = function(entry) {
+    var media = $scope.mediaOne(entry);
+    return media.type ? (media.type == "video/mp4") : (media.url ? (media.url.indexOf(".mp4") != -1) : false);
+  }
+
+  $scope.ifPathNot = function(path) {
+    return $location.path() != path;
+  }
+
+  $scope.setCurrEntry = function(entry) {
+    $scope.currEntry = entry;
+  }
+
+  $scope.loadFeed('tutu.json');
+})
+
+.controller('ListCtrl', function($scope, $location, $timeout) {
+  $scope.layoutDone = function() {
+    $scope.setLoading(false);
+    $timeout(function() { // wait for DOM
+      $('a[data-toggle="tooltip"]').tooltip();
+    }, 100);
+    $timeout(function() { // wait for DOM
+		var labelArray = document.querySelectorAll("span.label");
+		[].forEach.call(
+		  labelArray, 
+		  function(item){
+			//item.classList.remove("label");
+			item.style.display = "none";			
+		  }
+		);
+		[].forEach.call(
+		  labelArray, 
+		  function(item){
+			//item.classList.add("label");
+			item.style.display = "inline-block";
+		  }
+		);	
+    }, 5000);
+  }
+
+  $scope.viewDetail = function(entry) {
+    $scope.setCurrEntry(entry);
+    $location.path('/detail');
+  }
+  
+  $scope.check = function(entry) {
+	var helper = document.querySelector("#helper");
+	helper.innerHTML = entry;
+	var firstChild = helper.firstChild;
+	if (firstChild instanceof HTMLParagraphElement && firstChild.textContent.indexOf("(...)") > -1) {
+		entry = firstChild.textContent;
+	}
+	var index = firstChild.textContent.indexOf("Warning: Illegal string offset");
+	if (index > -1) {
+	  entry = entry.slice(0,index);
+	}
+	return entry;
+    //$scope.setCurrEntry(entry);
+    //$location.path('/detail');
+  }
+  
+  $scope.formatDate = function(date) {
+	var newDate = new Date(date);
+	var daysList = new Array( "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche" );
+	var monthsList = new Array( "Janvier", "Férvier", "Mars", "Avril", "Mai", "Juin", "Juillet", "Aout" , "Septembre", "Octobre", "Novembre", "Décembre");
+
+	var newDayInteger = newDate.getDay() - 1;
+	var newDayString = daysList[newDayInteger];
+
+	var newMonthInteger = newDate.getMonth();
+	var newMonthString = monthsList[newMonthInteger];
+	
+	var newYear = newDate.getFullYear();
+	var newMonthString = monthsList[newMonthInteger];
+  
+	return newDayString + " " + newDayInteger + " " + newMonthString + " " + newYear;
+    //$scope.setCurrEntry(entry);
+    //$location.path('/detail');
+  }  
+  
+  $scope.formatLabel = function(category) {
+	
+	return category;
+  } 
+  
+})
+
+.controller('DetailCtrl', function($scope, $location) {
+  $scope.scrollClear($location.path());
+
+  $scope.vPlayer = $('#vPlayer')[0];
+  $scope.videoPlay = $scope.hasVideo($scope.currEntry); // show errors only after "Play" video
+  $($scope.vPlayer).on('error', function() {
+    if ($scope.videoPlay) {
+      $scope.vidTagAlert.show();
+    }
+  });
+
+  $scope.vidTagAlert = $('#vidTagAlert');
+  $('#btnTagAlert').on('click', function() {
+    $scope.vidTagAlert.hide();
+  });
+
+  $scope.videoStop = function() {
+    $scope.vPlayer.pause();
+  }
+})
+
+//]]> 
+
+</script>
+
+</body>
+
+</html>
+
