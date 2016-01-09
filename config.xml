@@ -54,7 +54,7 @@
     -->
 
     <!-- Define app icon for each platform. -->
-    <icon src="icon.png" />
+    <icon src="Cute-Ball-Go-icon.png" />
 
     <!-- Define app splash screen for each platform. -->
     <gap:splash src="icon.png"       gap:platform="android" gap:qualifier="port-ldpi" />
