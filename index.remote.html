@@ -16,6 +16,17 @@
   <script type="text/javascript" src="angular.js"></script>
   <script type="text/javascript" src="angular-sanitize.js"></script>
   
+  <style>
+  
+	a:hover
+	{
+		color:	#FF0000;
+		text-decoration: none;
+	}    
+  
+  </style>
+  
+
   <title>Critikat: derniers articles</title>
 
 </head>
@@ -34,12 +45,12 @@
   <div ng-controller="ListCtrl">
     <h1 ng-cloak>
 		<a href="http://www.critikat.com/" target="_blank">
-		<img src="http://www.critikat.com/squelettes/css/img/critikat.svg" style = "width: 142px; left:44%; position:relative">
+		<img src="http://www.critikat.com/squelettes/css/img/critikat.svg" style = "width: 142px; left:30%; position:relative">
 		</a>
 	</h1>
 
     <div class="well well-small" ng-repeat="entry in feed_result.entries" list-done="layoutDone()" ng-cloak>
-      <a href="" ng-click="viewDetail(entry)" class="pull-left rssThumb" title="view detail" data-toggle="tooltip"><img ng-repeat="thumbnail in mediaOne(entry).thumbnails" ng-src="{{thumbnail.url}}"></a>
+      <a style="" href="" ng-click="viewDetail(entry)" class="pull-left rssThumb" title="view detail" data-toggle="tooltip"><img ng-repeat="thumbnail in mediaOne(entry).thumbnails" ng-src="{{thumbnail.url}}"></a>
 
       <a href="{{entry.link}}" target="_blank" title="article en ligne sur le site {{feed_result.viewAt}}" data-toggle="tooltip" data-placement="left" class="btn btn-primary pull-right" style="margin: 0 0 5px 10px">Accès au site</a>
 
