@@ -60,6 +60,39 @@
 
     <!-- Define app icon for each platform. -->
     <icon src="logo-ulule_1.png" />
+	
+	<!-- iOS 7.0+ -->
+	
+			<!-- iPhone 6 / 6+ -->
+			<!-- <icon src="icon-60@3x.png" platform="ios" width="180" height="180" /> 		-->
+			<!-- iPhone / iPod Touch  -->
+			<!-- <icon src="icon-60.png" platform="ios" width="60" height="60" />			-->
+	
+			<!-- iPhone - Settings -->
+			<icon src="Icon-Small@2x.png" platform="ios" width="58" height="58" />
+			<icon src="Icon-Small@3x.png" platform="ios" width="87" height="87" />
+			<!-- iPhone - Spotlight -->
+			<icon src="Icon-40@2x.png" platform="ios" width="80" height="80" />
+			<icon src="Icon-40@3x.png" platform="ios" width="120" height="120" />
+			<!-- iPhone - App -->
+			<icon src="Icon-60@3x.png" platform="ios" width="180" height="180" />	
+			<!-- iPad - Settings -->
+			<icon src="Icon-Small.png" platform="ios" width="29" height="29" />
+			<!-- iPad - Spotlight -->	
+			<icon src="Icon-40.png" platform="ios" width="40" height="40" />
+			<!-- iPad - App -->		
+			<icon src="Icon-76.png" platform="ios" width="76" height="76" />
+			<icon src="Icon-76@2x.png" platform="ios" width="152" height="152" />
+	<!-- Android -->
+			<!-- iPhone - Settings -->
+			<!-- <icon src="ldpi.png" platform="android" qualifier="ldpi" /> 				-->
+			<icon src="mdpi.png" platform="android" qualifier="mdpi" />
+			<icon src="hdpi.png" platform="android" qualifier="hdpi" />
+			<icon src="xhdpi.png" platform="android" qualifier="xhdpi" />
+			<icon src="xxhdpi.png" platform="android" qualifier="xxhdpi" />
+			<!-- <icon src="fr-xxhdpi.png" platform="android" qualifier="fr-xxhdpi" />	 	-->
+
+		
 
     <!-- Define app splash screen for each platform. -->
     <gap:splash src="icon.png"       gap:platform="android" gap:qualifier="port-ldpi" />
