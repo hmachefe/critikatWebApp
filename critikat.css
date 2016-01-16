@@ -98,10 +98,11 @@ p,
 }
 
 h3.lead {
-    margin-bottom: 10px;
+    margin-bottom: 14px;
     color: white;
     text-align: center;
     font-size: 44px;
+    margin-top: -26px;
 }
 
 .well .rssThumb img {
